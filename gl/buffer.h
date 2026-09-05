@@ -33,7 +33,7 @@ typedef struct {
 GLBuffer *glbuffer_create(Allocator *allocator, GLBufferType type);
 void glbuffer_init(GLBuffer *buffer);
 void glbuffer_bind(GLBuffer *buffer);
-void glbuffer_unbind(GLBufferType type);
+void glbuffer_unbind(GLBuffer *buffer);
 void glbuffer_data(GLBuffer *buffer, u64 dataSize, const void *data, GLBufferUsage usage);
 void glbuffer_dataSub(GLBuffer *buffer, u64 offset, u64 dataSize, const void *data);
 void glbuffer_destroy(GLBuffer *buffer);

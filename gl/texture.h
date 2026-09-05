@@ -2,6 +2,7 @@
 # define GL_TEXTURE_H
 
 # include "util/file.h"
+# include "math/vector2.h"
 
 typedef enum : u8 {
 	GLTEXTURE_TYPE_2D,
@@ -32,12 +33,14 @@ typedef struct {
 	Allocator *allocator;
 	File *file;
 	GLTextureType type;
+	V2i size;
 	u32 handle;
 } GLTexture;
 
 GLTexture *gltexture_create(Allocator *allocator, GLTextureType type);
 void gltexture_init(GLTexture *texture);
 void gltexture_bind(GLTexture *texture, u8 loc);
+void gltexture_unbind(GLTexture *texture, u8 loc);
 void gltexture_set(GLTexture *texture, GLTextureParameter param, GLTextureParameterValue value);
 bool gltexture_generate(GLTexture *texture, const char *path, bool generateMipmap);
 void gltexture_destroy(GLTexture *tex);

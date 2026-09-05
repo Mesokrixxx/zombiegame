@@ -4,8 +4,8 @@
 # include "util/types.h"
 
 typedef enum : u8 {
-	GLTYPES_F32,
-	GLTYPES_U8,
+	GLTYPE_F32,
+	GLTYPE_U8,
 } GLType;
 
 typedef struct {

@@ -21,8 +21,8 @@ int main() {
 
 	Sprites *sprites = sprites_create(&mallocator, "res/shaders/sprite.glsl");
 	ASSERT(sprites_init(sprites), "failed to init sprite handler: %s", error_msgGet());
-	u64 playerTexture = sprites_registerTexture(sprites, "res/textures/player.png");
-	ASSERT(playerTexture, "failed to create texture: %s", error_msgGet());
+	SpriteAtlasID entitiesAtlas = sprites_registerAtlas(sprites, v2i(32, 32), "res/textures/entities.png");
+	ASSERT(entitiesAtlas, "failed to create atlas: %s", error_msgGet());
 
 	window_setBackgroundColor(window, v4(1, 1, 1, 1));
 
@@ -58,7 +58,7 @@ int main() {
 
 		window_clear(window);
 
-		sprites_add(sprites, &(Sprite){ v2(500, 500), v2(60, 60), 0 });
+		sprites_add(sprites, entitiesAtlas, v2i(0, 0), &(Sprite){ v2(500, 500), v2(60, 60), 0 });
 
 		sprites_draw(sprites);
 		window_swap(window);

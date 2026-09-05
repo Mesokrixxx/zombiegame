@@ -8,6 +8,11 @@ typedef struct {
 	V2 uv;
 } Vertex;
 
+typedef struct {
+	Sprite data;
+
+} SpriteInner;
+
 # define MAX_SPRITES 256
 
 Sprites *sprites_create(Allocator *allocator, const char *path) {
@@ -28,8 +33,7 @@ Sprites *sprites_create(Allocator *allocator, const char *path) {
 		.errorLog = errorLog,
 	};
 
-	dynlist_init(allocator, sprites->textures, 8);
-	dynlist_init(allocator, sprites->sprites, MAX_SPRITES);
+	dynlist_init(allocator, sprites->atlases, 8);
 	return sprites;
 }
 
@@ -54,8 +58,8 @@ bool sprites_init(Sprites *sprites) {
 	glbuffer_attribPointer(
 		sprites->vbo, sizeof(Vertex), 0, 
 		((GLBufferAttribPointerDesc[]){
-			{ .count = 2, .type = GLTYPES_F32 },
-			{ .count = 2, .type = GLTYPES_F32, .offset = offsetof(Vertex, uv) }
+			{ .count = 2, .type = GLTYPE_F32 },
+			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Vertex, uv) }
 		}));
 
 	glbuffer_init(sprites->ebo);
@@ -68,26 +72,30 @@ bool sprites_init(Sprites *sprites) {
 	glbuffer_attribPointer(
 		sprites->ibo, sizeof(Sprite), 2,
 		((GLBufferAttribPointerDesc[]){
-			{ .count = 2, .type = GLTYPES_F32, .divisor = 1 },
-			{ .count = 2, .type = GLTYPES_F32, .offset = offsetof(Sprite, scale), .divisor = 1 },
-			{ .count = 1, .type = GLTYPES_F32, .offset = offsetof(Sprite, z), .divisor = 1 },
+			{ .count = 2, .type = GLTYPE_F32, .divisor = 1 },
+			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, scale), .divisor = 1 },
+			{ .count = 1, .type = GLTYPE_F32, .offset = offsetof(Sprite, z), .divisor = 1 },
+			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvMin), .divisor = 1},
+			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvMax), .divisor = 1},
 		}));
 	return true;
 }
 
 void sprites_update(Sprites *sprites) {
-	dynlist_clear(sprites->sprites);
+	dynlist_forEach(sprites->atlases, it) {
+		dynlist_clear(it.elem->sprites);
+	}
 }
 
-SpriteTexture sprites_registerTexture(Sprites *sprites, const char *path) {
-	u64 listSize = dynlist_size(sprites->textures);
+SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char *path) {
+	u64 listSize = dynlist_size(sprites->atlases);
 
 	GLTexture *texture = gltexture_create(sprites->allocator, GLTEXTURE_TYPE_2D);
 	gltexture_init(texture);
 	gltexture_bind(texture, listSize);
 	if (!gltexture_generate(texture, path, false)) {
+		gltexture_unbind(texture, listSize);
 		gltexture_destroy(texture);
-		// TODO gltexture_unbind()
 		return 0;
 	}
 	gltexture_set(texture, GLTEXTURE_PARAMETER_WRAPS, GLTEXTURE_PARAMETERVALUE_REPEAT);
@@ -95,42 +103,55 @@ SpriteTexture sprites_registerTexture(Sprites *sprites, const char *path) {
 	gltexture_set(texture, GLTEXTURE_PARAMETER_MINFILTER, GLTEXTURE_PARAMETERVALUE_NEAREST);
 	gltexture_set(texture, GLTEXTURE_PARAMETER_MAGFILTER, GLTEXTURE_PARAMETERVALUE_NEAREST);
 	
-	dynlist_pushBack(sprites->textures, &texture);
+	V2 normalizedStep = v2(1 / (f32)texture->size.x, 1 / (f32)texture->size.y);
+	SpriteAtlas atlas = {
+		.texture = texture,
+		.normalizedSpriteStep = v2(normalizedStep.x * spriteSize.x, normalizedStep.y * spriteSize.y),
+	};
+	dynlist_init(sprites->allocator, atlas.sprites, MAX_SPRITES);
+
+	dynlist_pushBack(sprites->atlases, &atlas);
 	return listSize + 1;
 }
 
-bool sprites_add(Sprites *sprites, Sprite *data) {
-	if (dynlist_size(sprites->sprites) >= MAX_SPRITES) {
+bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data) {
+	SpriteAtlas *atlas = dynlist_get(sprites->atlases, atlasID - 1);
+
+	if (dynlist_size(atlas->sprites) >= MAX_SPRITES) {
 		string_assign(sprites->errorLog, "max sprites count reached: %zu", MAX_SPRITES);
 		error_msgSet(sprites->errorLog);
 		return false;
 	}
 
-	dynlist_pushBack(sprites->sprites, data);
+	data->_uvMin = v2(atlas->normalizedSpriteStep.x * atlasIndex.x, atlas->normalizedSpriteStep.y * atlasIndex.y);
+	data->_uvMax = v2_add(data->_uvMin, atlas->normalizedSpriteStep);
+	dynlist_pushBack(atlas->sprites, data);
 	return true;
 }
 
 void sprites_draw(Sprites *sprites) {
-	u64 listSize = dynlist_size(sprites->sprites);
-	if (!listSize)
-		return ;
-
-	glbuffer_bind(sprites->ibo);
-	glbuffer_dataSub(sprites->ibo, 0, listSize * sizeof(*sprites->sprites), sprites->sprites);
-	
 	glshader_bind(sprites->shader);
 	glbuffer_bind(sprites->vao);
-	gldraw_elementsInstanced(GLDRAW_METHOD_TRIANGLES, 6, GLTYPES_U8, 0, listSize);
+	glbuffer_bind(sprites->ibo);
+	dynlist_forEach(sprites->atlases, it) {
+		u64 lSize = dynlist_size(it.elem->sprites);
+		if (!lSize)
+			continue ;
+
+		gltexture_bind(it.elem->texture, 0);
+		glbuffer_dataSub(sprites->ibo, 0, lSize * sizeof(Sprite), it.elem->sprites);
+		gldraw_elementsInstanced(GLDRAW_METHOD_TRIANGLES, 6, GLTYPE_U8, 0, lSize);
+	}
 }
 
 void sprites_destroy(Sprites *sprites) {
 	if (!sprites)
 		return ;
-	dynlist_destroy(sprites->sprites);
-	dynlist_forEach(sprites->textures, it) {
-		gltexture_destroy(*it.elem);
+	dynlist_forEach(sprites->atlases, it) {
+		gltexture_destroy(it.elem->texture);
+		dynlist_destroy(it.elem->sprites);
 	}
-	dynlist_destroy(sprites->textures);
+	dynlist_destroy(sprites->atlases);
 	glbuffer_destroy(sprites->vao);
 	glbuffer_destroy(sprites->vbo);
 	glbuffer_destroy(sprites->ibo);

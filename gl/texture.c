@@ -92,6 +92,13 @@ void gltexture_bind(GLTexture *texture, u8 loc) {
 	boundTexture[texture->type] = texture->handle;
 }
 
+void gltexture_unbind(GLTexture *texture, u8 loc) {
+	GLTexture tex = { 
+		.type = texture->type 
+	};
+	gltexture_bind(&tex, loc);
+}
+
 void gltexture_set(GLTexture *tex, GLTextureParameter param, GLTextureParameterValue value) {
 	u32 target = getGlType(tex->type);
 
@@ -116,14 +123,15 @@ bool gltexture_generate(GLTexture *texture, const char *path, bool generateMipma
 
 	u32 target = getGlType(texture->type);
 	int width, height;
+
 	u8 *data = 
 		stbi_load_from_memory(
-			(u8 *)texture->file->content, string_length(texture->file->content), 
-			&width, &height, NULL, 0);
+			(u8 *)texture->file->content, string_length(texture->file->content), &width, &height, NULL, 0);
 	if (!data) {
 		error_msgSet("convert image to usable data");
 		return false;
 	}
+	texture->size = v2i(width, height);
 
 	glTexImage2D(target, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	if (generateMipmap)

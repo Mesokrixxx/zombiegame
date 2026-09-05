@@ -78,10 +78,9 @@ void glbuffer_bind(GLBuffer *buffer) {
 	boundBuffers[buffer->type] = buffer->handle;
 }
 
-void glbuffer_unbind(GLBufferType type) {
+void glbuffer_unbind(GLBuffer *buf) {
 	GLBuffer buffer = {
-		.type = type,
-		.handle = 0,
+		.type = buf->type,
 	};
 	glbuffer_bind(&buffer);
 }

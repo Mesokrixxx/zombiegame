@@ -3,9 +3,12 @@
 
 layout (location = 0) in vec2 lPos;
 layout (location = 1) in vec2 lTexCoord;
+
 layout (location = 2) in vec2 iPos;
 layout (location = 3) in vec2 iScale;
 layout (location = 4) in float iZ;
+layout (location = 5) in vec2 iUVMin;
+layout (location = 6) in vec2 iUVMax;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -13,8 +16,8 @@ uniform mat4 projection;
 out vec2 texCoord;
 
 void main() {
-	texCoord = lTexCoord;
-	
+	texCoord = mix(iUVMin, iUVMax, lTexCoord);
+
 	gl_Position = projection * view * vec4(lPos * iScale + iPos, iZ, 1);
 }
 
