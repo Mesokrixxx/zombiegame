@@ -46,8 +46,8 @@ bool sprites_init(Sprites *sprites) {
 
 	Vertex vertices[] = {
 		{ v2(-0.5, -0.5), v2(0, 0) },
-		{ v2(-0.5,  0.5), v2(1, 0) },
-		{ v2( 0.5, -0.5), v2(0, 1) },
+		{ v2(-0.5,  0.5), v2(0, 1) },
+		{ v2( 0.5, -0.5), v2(1, 0) },
 		{ v2( 0.5,  0.5), v2(1, 1) },
 	};
 	u8 indices[] = { 0, 1, 2, 1, 2, 3 };
@@ -75,6 +75,7 @@ bool sprites_init(Sprites *sprites) {
 			{ .count = 2, .type = GLTYPE_F32, .divisor = 1 },
 			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, scale), .divisor = 1 },
 			{ .count = 1, .type = GLTYPE_F32, .offset = offsetof(Sprite, z), .divisor = 1 },
+			{ .count = 4, .type = GLTYPE_F32, .offset = offsetof(Sprite, color), .divisor = 1},
 			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvMin), .divisor = 1},
 			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvMax), .divisor = 1},
 		}));
@@ -106,6 +107,7 @@ SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char
 	V2 normalizedStep = v2(1 / (f32)texture->size.x, 1 / (f32)texture->size.y);
 	SpriteAtlas atlas = {
 		.texture = texture,
+		.spriteCount = v2i_div(texture->size, spriteSize),
 		.normalizedSpriteStep = v2(normalizedStep.x * spriteSize.x, normalizedStep.y * spriteSize.y),
 	};
 	dynlist_init(sprites->allocator, atlas.sprites, MAX_SPRITES);
@@ -114,7 +116,7 @@ SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char
 	return listSize + 1;
 }
 
-bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data) {
+bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data, u64 spriteCount) {
 	SpriteAtlas *atlas = dynlist_get(sprites->atlases, atlasID - 1);
 
 	if (dynlist_size(atlas->sprites) >= MAX_SPRITES) {
@@ -123,9 +125,10 @@ bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite
 		return false;
 	}
 
+	atlasIndex.y = atlas->spriteCount.y - atlasIndex.y - 1;
 	data->_uvMin = v2(atlas->normalizedSpriteStep.x * atlasIndex.x, atlas->normalizedSpriteStep.y * atlasIndex.y);
 	data->_uvMax = v2_add(data->_uvMin, atlas->normalizedSpriteStep);
-	dynlist_pushBack(atlas->sprites, data);
+	dynlist_pushBackArray(atlas->sprites, data, spriteCount);
 	return true;
 }
 

@@ -122,11 +122,12 @@ bool gltexture_generate(GLTexture *texture, const char *path, bool generateMipma
 		return false;
 
 	u32 target = getGlType(texture->type);
-	int width, height;
+	int width, height, channels;
 
+	stbi_set_flip_vertically_on_load(true);
 	u8 *data = 
 		stbi_load_from_memory(
-			(u8 *)texture->file->content, string_length(texture->file->content), &width, &height, NULL, 0);
+			(u8 *)texture->file->content, string_length(texture->file->content), &width, &height, &channels, 0);
 	if (!data) {
 		error_msgSet("convert image to usable data");
 		return false;

@@ -6,6 +6,7 @@
 #include "util/log.h"
 #include "memory/mallocator.h"
 #include "src/sprites.h"
+#include "src/fonts.h"
 
 int main() {
 	Mallocator mallocator;
@@ -23,6 +24,9 @@ int main() {
 	ASSERT(sprites_init(sprites), "failed to init sprite handler: %s", error_msgGet());
 	SpriteAtlasID entitiesAtlas = sprites_registerAtlas(sprites, v2i(32, 32), "res/textures/entities.png");
 	ASSERT(entitiesAtlas, "failed to create atlas: %s", error_msgGet());
+
+	Fonts *fonts = fonts_create(&mallocator, sprites, v2i(16, 16));
+	ASSERT(fonts_init(fonts, "res/textures/fonts.png"), "failed to init font handler: %s", error_msgGet());
 
 	window_setBackgroundColor(window, v4(1, 1, 1, 1));
 
@@ -58,7 +62,7 @@ int main() {
 
 		window_clear(window);
 
-		sprites_add(sprites, entitiesAtlas, v2i(0, 0), &(Sprite){ v2(500, 500), v2(60, 60), 0 });
+		sprites_add(sprites, entitiesAtlas, v2i(0, 0), &(Sprite){ v2(500, 500), v2(60, 60), 0, v4(1, 1, 1, 1) }, 1);
 
 		sprites_draw(sprites);
 		window_swap(window);
@@ -66,6 +70,7 @@ int main() {
 
 	LOG("allocated %zu bytes (%zu Ko)", mallocator.used, mallocator.used >> 10);
 
+	fonts_destroy(fonts);
 	sprites_destroy(sprites);
 	inputs_destroy(inputs);
 	window_destroy(window);

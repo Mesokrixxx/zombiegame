@@ -72,14 +72,14 @@ void _dynlist_reserveImpl(void **list, u64 reserve) {
 	*list = (u8 *)nHeader + _dynlist_headerSize();
 }
 
-void _dynlist_pushBackImpl(void **list, void *x) {
+void _dynlist_pushBackArrayImpl(void **list, void *arr, u64 n) {
 	u64 size = dynlist_size(*list);
 
-	_dynlist_reserveImpl(list, size + 1);	
+	_dynlist_reserveImpl(list, size + n);
 	
 	DynlistHeader *header = _dynlist_getHeader(*list);
 
-	memcpy((u8 *)*list + size * header->typeSize, x, header->typeSize);
+	memcpy((u8 *)*list + size * header->typeSize, arr, header->typeSize * n);
 	header->used++;
 }
 

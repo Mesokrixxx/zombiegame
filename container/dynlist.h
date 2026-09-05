@@ -25,7 +25,10 @@ void dynlist_destroy(void *list);
 	_dynlist_reserveImpl((void **)&(list), reserve)
 
 # define dynlist_pushBack(list, x) \
-	_dynlist_pushBackImpl((void **)&(list), (x))
+	_dynlist_pushBackArrayImpl((void **)&(list), (x), 1)
+
+# define dynlist_pushBackArray(list, arr, n) \
+	_dynlist_pushBackArrayImpl((void **)&(list), (arr), (n))
 
 # define dynlist_forEach(list, it) \
 	_dynlist_forEachImpl(list, it, CONCAT(dll, __COUNTER__), CONCAT(dli, __COUNTER__))
@@ -38,7 +41,7 @@ u64 _dynlist_headerSize();
 
 void _dynlist_initImpl(Allocator *, void **, u64, u64);
 void _dynlist_reserveImpl(void **, u64);
-void _dynlist_pushBackImpl(void **, void *);
+void _dynlist_pushBackArrayImpl(void **, void *, u64);
 void *_dynlist_getImpl(void *, u64);
 
 # define _dynlist_forEachImpl(list, it, listname, itname) \
