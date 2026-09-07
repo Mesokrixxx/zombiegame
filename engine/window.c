@@ -54,7 +54,7 @@ bool window_init(Window *window, const char *title) {
 	return true;
 } 
 
-void window_setBackgroundColor(Window *, V4 color) {
+void window_backgroundColor(Window *, V4 color) {
 	glClearColor(color.r, color.g, color.b, color.a);
 }
 
@@ -78,6 +78,10 @@ void window_clear(Window *window) {
 
 void window_swap(Window *window) {
 	SDL_GL_SwapWindow(window->handle);
+}
+
+void window_vSync(Window *, bool enable) {
+	SDL_GL_SetSwapInterval(enable ? 1 : 0);
 }
 
 void window_destroy(Window *window) {

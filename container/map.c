@@ -51,13 +51,13 @@ static void *map_alloc(Allocator *allocator, u64 capacity, u64 keySize, u64 valu
 	return data;
 }
 
-Map *map_create(Allocator *allocator, u64 keySize, u64 valueSize, map_hash_f hash_f, map_cmp_f cmp_f) {
+Map *map_create(Allocator *allocator, u64 keySize, u64 valueSize, MapHashF hash_f, MapCmpF cmp_f) {
 	Map *map = allocator_alloc(allocator, sizeof(Map));
 	void *data = map_alloc(allocator, PRIMES[0], keySize, valueSize);
 	*map = (Map){
 		.allocator = allocator,
-		.hash_f = hash_f,
-		.cmp_f = cmp_f,
+		.hashF = hash_f,
+		.cmpF = cmp_f,
 		.keySize = keySize,
 		.valueSize = valueSize,
 		.reserved = PRIMES[0],
@@ -151,7 +151,7 @@ static void *map_spareValue(Map *map) {
 }
 
 bool map_insert(Map *map, const void *key, const void *value) {
-	Hash hash = map->hash_f(map, key);
+	Hash hash = map->hashF(map, key);
 	Hash hashbits = hash & HASH_MASK;
 	u64 pos = hash % map->reserved;
 	u64 dist = 0;
@@ -170,7 +170,7 @@ bool map_insert(Map *map, const void *key, const void *value) {
 			memcpy(map_valueAt(map, pos), value, map->valueSize);
 			break ;
 		}
-		else if (entry->dist == dist && entry->hash == hashbits && map->cmp_f(map, map_keyAt(map, pos), key)) {
+		else if (entry->dist == dist && entry->hash == hashbits && map->cmpF(map, map_keyAt(map, pos), key)) {
 			memcpy(map_keyAt(map, pos), key, map->keySize);
 			memcpy(map_valueAt(map, pos), value, map->valueSize);
 			break ;
@@ -224,7 +224,7 @@ bool map_insert(Map *map, const void *key, const void *value) {
 }
 
 static u64 map_find(Map *map, const void *key) {
-	Hash hash = map->hash_f(map, key);
+	Hash hash = map->hashF(map, key);
 	Hash hashbits = hash & HASH_MASK;
 	u64 pos = hash % map->reserved;
 	u64 dist = 0;
@@ -234,7 +234,7 @@ static u64 map_find(Map *map, const void *key) {
 		if (!entries[pos].used)
 			return INVALID_POS;
 
-		if (entries[pos].hash == hashbits && map->cmp_f(map, map_keyAt(map, pos), key))
+		if (entries[pos].hash == hashbits && map->cmpF(map, map_keyAt(map, pos), key))
 			return pos;
 
 		dist++;

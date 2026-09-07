@@ -5,7 +5,9 @@
 void *allocator_alloc(Allocator *alloc, u64 size) {
 	void *ptr = alloc->allocImpl(alloc, size);
 	
-	ASSERT(ptr, "failed to allocate %zu bytes: %s", size, error_msgGet());
+	ASSERT(ptr, 
+		"failed to allocate %zu bytes: %s", size, error_msgGet());
+	alloc->allocCount++;
 	return ptr;
 }
 
@@ -13,4 +15,5 @@ void allocator_free(Allocator *alloc, void *ptr) {
 	if (!ptr)
 		return ;
 	alloc->freeImpl(alloc, ptr);
+	alloc->freeCount++;
 }

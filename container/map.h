@@ -6,13 +6,13 @@
 
 typedef struct map Map;
 
-typedef bool (*map_cmp_f)(Map*, const void*, const void*);
-typedef Hash (*map_hash_f)(Map*, const void*);
+typedef bool (*MapCmpF)(Map*, const void*, const void*);
+typedef Hash (*MapHashF)(Map*, const void*);
 
 struct map {
 	Allocator *allocator;
-	map_hash_f hash_f;
-	map_cmp_f cmp_f;
+	MapHashF hashF;
+	MapCmpF cmpF;
 	u64 keySize;
 	u64 valueSize;
 	u64 used;
@@ -23,7 +23,7 @@ struct map {
 	bool rehashLocked;
 };
 
-Map *map_create(Allocator *allocator, u64 keySize, u64 valueSize, map_hash_f hash_f, map_cmp_f cmp_f);
+Map *map_create(Allocator *allocator, u64 keySize, u64 valueSize, MapHashF hash_f, MapCmpF cmp_f);
 bool map_insert(Map *map, const void *key, const void *value);
 void *map_get(Map *map, const void *key);
 void map_destroy(Map *map);

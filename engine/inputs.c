@@ -65,17 +65,15 @@ void inputs_process(Inputs *inputs, const SDL_Event *event) {
 				i = SDL_SCANCODE_COUNT + event->button.button - 1;
 			}
 
-			InputInfo *infos = dynlist_get(inputs->buttons, i);
 			u8 nState = INPUT_EXISTS;
-
-			if (!(infos->state & INPUT_DOWN) && down)
+			if (!(inputs->buttons[i].state & INPUT_DOWN) && down)
 				nState |= (INPUT_PRESSED | INPUT_DOWN);
-			else if (infos->state & INPUT_DOWN && !down)
+			else if (inputs->buttons[i].state & INPUT_DOWN && !down)
 				nState |= INPUT_RELEASED;
 			else
 				break ;
 
-			*infos = (InputInfo) {
+			inputs->buttons[i] = (InputInfo) {
 				.state = nState,
 				.lastUpdate = inputs->now,
 			};
@@ -85,8 +83,6 @@ void inputs_process(Inputs *inputs, const SDL_Event *event) {
 }
 
 InputInfo inputs_get(Inputs *inputs, const char *inputStr) {
-	InputInfo *infos;
-	u64 code;
 	char buf[KEYNAME_MAXLEN];
 
 	strncpy(buf, inputStr, KEYNAME_MAXLEN);
@@ -104,15 +100,16 @@ InputInfo inputs_get(Inputs *inputs, const char *inputStr) {
 			return INVALID_INPUT;
 		}
 		
-		code = SDL_GetScancodeFromKey(key, NULL);
-		infos = dynlist_get(inputs->buttons, code);
-		infos->state |= INPUT_EXISTS;
+		u64 code = SDL_GetScancodeFromKey(key, NULL);
+		
+		inputs->buttons[code].state |= INPUT_EXISTS;
 		if (!map_insert(inputs->buttonNames, buf, &code))
 			return INVALID_INPUT;
+		
+		return inputs->buttons[code];	
 	}
-	else
-		infos = dynlist_get(inputs->buttons, *mapVal);
-	return *infos;
+	
+	return inputs->buttons[*mapVal];
 }
 
 void inputs_destroy(Inputs *inputs) {

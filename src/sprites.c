@@ -93,7 +93,7 @@ SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char
 
 	GLTexture *texture = gltexture_create(sprites->allocator, GLTEXTURE_TYPE_2D);
 	gltexture_init(texture);
-	gltexture_bind(texture, listSize);
+	gltexture_bind(texture, 0);
 	if (!gltexture_generate(texture, path, false)) {
 		gltexture_unbind(texture, listSize);
 		gltexture_destroy(texture);
@@ -117,7 +117,7 @@ SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char
 }
 
 bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data, u64 spriteCount) {
-	SpriteAtlas *atlas = dynlist_get(sprites->atlases, atlasID - 1);
+	SpriteAtlas *atlas = &sprites->atlases[atlasID - 1];
 
 	if (dynlist_size(atlas->sprites) >= MAX_SPRITES) {
 		string_assign(sprites->errorLog, "max sprites count reached: %zu", MAX_SPRITES);

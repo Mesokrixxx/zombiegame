@@ -7,8 +7,10 @@ typedef struct allocator {
 	void *(*allocImpl)(struct allocator*, u64);
 	void (*freeImpl)(struct allocator*, void*);
 
-	u64 used;
 	u64 reserved;
+	u64 used;
+	u64 allocCount;
+	u64 freeCount;
 } Allocator;
 
 void *allocator_alloc(Allocator *alloc, u64 size);

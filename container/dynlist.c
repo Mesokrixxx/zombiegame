@@ -44,12 +44,12 @@ void _dynlist_initImpl(Allocator *allocator, void **list, u64 typeSize, u64 rese
 	*list = (u8 *)header + _dynlist_headerSize();
 }
 
-void _dynlist_reserveImpl(void **list, u64 reserve) {
+bool _dynlist_reserveImpl(void **list, u64 reserve) {
 	DynlistHeader *oHeader = _dynlist_getHeader(*list);
 
 	u64 nCap = oHeader->reserved;
 	if (nCap >= reserve)
-		return ;
+		return false;
 
 	while (nCap < reserve)
 		nCap *= 2;
@@ -70,9 +70,33 @@ void _dynlist_reserveImpl(void **list, u64 reserve) {
 	allocator_free(oHeader->allocator, oHeader);
 
 	*list = (u8 *)nHeader + _dynlist_headerSize();
+	return true;
 }
 
-void _dynlist_pushBackArrayImpl(void **list, void *arr, u64 n) {
+void _dynlist_copyImpl(void **dest, const void *src) {
+	DynlistHeader *srcHeader = _dynlist_getHeader((void *)src);
+
+	if (*dest)
+		_dynlist_reserveImpl(dest, srcHeader->used);
+	else
+	 	_dynlist_initImpl(srcHeader->allocator, dest, srcHeader->typeSize, srcHeader->used);
+	memcpy(*dest, src, srcHeader->used * srcHeader->typeSize);
+	_dynlist_getHeader(*dest)->used = srcHeader->used;
+}
+
+void _dynlist_pushBackNImpl(void **list, const void *x, u64 n) {
+	u64 size = dynlist_size(*list);
+
+	_dynlist_reserveImpl(list, size + n);
+
+	DynlistHeader *header = _dynlist_getHeader(*list);
+
+	for (u64 i = 0; i < n; i++)
+		memcpy((u8 *)*list + (size + i) * header->typeSize, x, header->typeSize);
+	header->used += n;
+}
+
+void _dynlist_pushBackArrayImpl(void **list, const void *arr, u64 n) {
 	u64 size = dynlist_size(*list);
 
 	_dynlist_reserveImpl(list, size + n);
@@ -80,9 +104,5 @@ void _dynlist_pushBackArrayImpl(void **list, void *arr, u64 n) {
 	DynlistHeader *header = _dynlist_getHeader(*list);
 
 	memcpy((u8 *)*list + size * header->typeSize, arr, header->typeSize * n);
-	header->used++;
-}
-
-void *_dynlist_getImpl(void *list, u64 idx) {
-	return (u8*)list + _dynlist_getHeader(list)->typeSize * idx;
+	header->used += n;
 }
