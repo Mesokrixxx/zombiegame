@@ -26,6 +26,7 @@ struct map {
 Map *map_create(Allocator *allocator, u64 keySize, u64 valueSize, MapHashF hash_f, MapCmpF cmp_f);
 bool map_insert(Map *map, const void *key, const void *value);
 void *map_get(Map *map, const void *key);
+void map_delete(Map *map, const void *key);
 void map_destroy(Map *map);
 
 Hash map_hash_fixxedStr(Map *map, const void *str);

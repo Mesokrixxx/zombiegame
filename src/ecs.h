@@ -29,6 +29,7 @@ ECSComponentID ecs_registerComponent(ECS *ecs, u64 dataSize);
 ECSEntity ecs_newEntity(ECS *ecs, ECSComponentID *cmps, u64 cmpCount);
 void *ecs_getComponent(ECS *ecs, ECSArchetype *arch, ECSComponentID component);
 void *ecs_get(ECS *ecs, ECSEntity entity, ECSComponentID component);
+void ecs_deleteEntity(ECS *ecs, ECSEntity entity);
 void ecs_destroy(ECS *ecs);
 
 # define ecs_forEach(ecs, cmps, it) \

@@ -15,6 +15,7 @@ typedef struct {
 SparseSet *sparseset_create(Allocator *allocator, u64 dataSize, u64 reserve);
 void sparseset_insert(SparseSet *ss, u64 id, const void *data);
 void *sparseset_get(SparseSet *ss, u64 id);
+void sparseset_delete(SparseSet *ss, u64 id);
 void sparseset_destroy(SparseSet *ss);
 
 #endif // CONTAINER_SPARSESET_H

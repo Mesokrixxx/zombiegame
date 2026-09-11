@@ -15,6 +15,10 @@ static void makeBitset(Bitset *bset, ECSComponentID *cmps, u64 cmpCount) {
 		bitset_set(*bset, cmps[i], true);
 }
 
+static u8 *archetypeData(ECSArchetype *arch) {
+	return (u8 *)arch + math_roundupPow2(sizeof(ECSArchetype), MAX_ALIGN);
+}
+
 ECS *ecs_create(Allocator *allocator) {
 	ECS *ecs = allocator_alloc(allocator, sizeof(ECS));
 	Bitset tmpBitset = bitset_create(allocator);
@@ -81,16 +85,14 @@ ECSEntity ecs_newEntity(ECS *ecs, ECSComponentID *cmps, u64 cmpCount) {
 			.used = (*archetypePtr)->used,
 		};
 
-		u64 dataOffset = 0, oDataOffset = 0;
+		u8 *nData = archetypeData(nArchetype);
+		u8 *oData = archetypeData(*archetypePtr);
 		for (u64 i = 0; i < cmpCount; i++) {
 			u64 compSize = ecs->components[cmps[i]];
 
-			memcpy(
-				(u8 *)(nArchetype + 1) + dataOffset, 
-				(u8 *)(*archetypePtr + 1) + oDataOffset, 
-				(*archetypePtr)->used * compSize);
-			dataOffset += nArchetype->reserved * compSize;
-			oDataOffset += (*archetypePtr)->reserved * compSize;
+			memcpy(nData, oData, (*archetypePtr)->used * compSize);
+			nData += math_roundupPow2(nCap * compSize, MAX_ALIGN);
+			oData += math_roundupPow2((*archetypePtr)->reserved * compSize, MAX_ALIGN);
 		}
 		
 		allocator_free(ecs->allocator, *archetypePtr);
@@ -116,16 +118,15 @@ void *ecs_getComponent(ECS *ecs, ECSArchetype *arch, ECSComponentID component) {
 	if (!bitset_bit(arch->compBitset, component))
 		return NULL;
 
-	u8 *data = (u8 *)arch + math_roundupPow2(sizeof(ECSArchetype), MAX_ALIGN);
-	u64 offset = 0;
+	u8 *data = archetypeData(arch);
 	dynlist_forEach(ecs->components, it) {
 		if (it.idx == component)
 			break ;
 		if (!bitset_bit(arch->compBitset, it.idx))
 			continue ;
-		offset += math_roundupPow2(*it.elem * arch->reserved, MAX_ALIGN);
+		data += math_roundupPow2(*it.elem * arch->reserved, MAX_ALIGN);
 	}
-	return data + offset;
+	return data;
 }
 
 void *ecs_get(ECS *ecs, ECSEntity entity, ECSComponentID component) {
@@ -136,6 +137,33 @@ void *ecs_get(ECS *ecs, ECSEntity entity, ECSComponentID component) {
 	u8 *cmpData = ecs_getComponent(ecs, ecs->archetypes[loc->archetype], component);
 
 	return cmpData ? cmpData + ecs->components[component] * loc->row : NULL;
+}
+
+void ecs_deleteEntity(ECS *ecs, ECSEntity entity) {
+	EntityLocation *loc = sparseset_get(ecs->entities, entity);
+	if (!loc)
+		return ;
+
+	ECSArchetype *arch = ecs->archetypes[loc->archetype];
+
+	u64 lastIdx = arch->used - 1;
+	if (loc->row == lastIdx) {
+		u8 *data = archetypeData(arch);
+		dynlist_forEach(ecs->components, it) {
+			u64 cmpSize = *it.elem;
+
+			if (bitset_bit(arch->compBitset, it.idx)) {
+				memcpy(
+					data + loc->row * cmpSize, 
+					data + lastIdx * cmpSize, 
+					cmpSize);
+			}
+			data += math_roundupPow2(cmpSize * arch->reserved, MAX_ALIGN);
+		}
+	}
+
+	arch->used--;
+	sparseset_delete(ecs->entities, entity);
 }
 
 void ecs_destroy(ECS *ecs) {

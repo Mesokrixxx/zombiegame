@@ -251,6 +251,38 @@ void *map_get(Map *map, const void *key) {
 	return pos == INVALID_POS ? NULL : map_valueAt(map, pos);
 }
 
+void map_delete(Map *map, const void *key) {
+	u64 pos = map_find(map, key);
+	if (pos == INVALID_POS)
+		return ;
+	
+	MapEntry *entries = map_entries(map);
+
+	entries[pos].used = false;
+	map->used--;
+
+	while (true) {
+		u64 nPos = (pos + 1) % map->reserved;
+
+		if (!entries[nPos].used || !entries[nPos].dist)
+			break ;
+
+		entries[pos] = (MapEntry){
+			.dist = entries[nPos].dist - 1,
+			.hash = entries[nPos].hash,
+			.used = true,
+		};
+
+		memcpy(map_keyAt(map, pos), map_keyAt(map, nPos), map->keySize);
+		memcpy(map_valueAt(map, pos), map_valueAt(map, nPos), map->valueSize);
+
+		entries[nPos].used = 0;
+		pos = nPos;
+	}
+
+	map_rehash(map, REHASH_SHRINK);
+}
+
 void map_destroy(Map *map) {
 	if (!map)
 		return ;

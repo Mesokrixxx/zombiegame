@@ -68,7 +68,7 @@ bool bitset_has(Bitset bset, Bitset has) {
 
 	if (bsetSize > dynlist_size(has)) {
 		dynlist_forEach(has, it) {
-			if ((bset[it.idx] & *it.elem) != it.idx)
+			if ((bset[it.idx] & *it.elem) != *it.elem)
 				return false;
 		}
 	}
