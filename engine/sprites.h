@@ -1,5 +1,5 @@
-#ifndef SPRITES_H
-# define SPRITES_H
+#ifndef ENGINE_SPRITES_H
+# define ENGINE_SPRITES_H
 
 # include "memory/allocator.h"
 # include "gl/shader.h"
@@ -41,8 +41,8 @@ Sprites *sprites_create(Allocator *allocator, const char *shaderPath);
 bool sprites_init(Sprites *sprites);
 SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char *path);
 void sprites_update(Sprites *sprites);
-bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data, u64 spriteCount);
+bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data);
 void sprites_draw(Sprites *sprites);
 void sprites_destroy(Sprites *sprites);
 
-#endif // SPRITES_H
+#endif // ENGINE_SPRITES_H

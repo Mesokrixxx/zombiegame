@@ -1,5 +1,5 @@
-#ifndef ECS_H
-# define ECS_H
+#ifndef ENGINE_ECS_H
+# define ENGINE_ECS_H
 
 # include "memory/allocator.h"
 # include "container/bitset.h"
@@ -32,8 +32,8 @@ void *ecs_get(ECS *ecs, ECSEntity entity, ECSComponentID component);
 void ecs_deleteEntity(ECS *ecs, ECSEntity entity);
 void ecs_destroy(ECS *ecs);
 
-# define ecs_forEach(ecs, cmps, it) \
-	_ecs_forEachImpl(ecs, cmps, ARRAY_SIZE(cmps), it, CONCAT(_ecs, __COUNTER__), CONCAT(_it, __COUNTER__))
+# define ecs_forEach(ecs, cmps, cmpCount, it) \
+	_ecs_forEachImpl(ecs, cmps, cmpCount, it, CONCAT(_ecs, __COUNTER__), CONCAT(_it, __COUNTER__))
 
 # define _ecs_forEachImpl(ecs, cmps, cmpCount, it, ecsname, itname) \
 	typedef struct { \
@@ -59,4 +59,4 @@ void ecs_destroy(ECS *ecs);
 u64 _ecs_getArchetypeIdx(ECS *, ECSComponentID *, u64);
 u64 _ecs_getNextArchetypeIdx(ECS *, u64);
 
-#endif // ECS_H
+#endif // ENGINE_ECS_H

@@ -115,7 +115,7 @@ SpriteAtlasID sprites_registerAtlas(Sprites *sprites, V2i spriteSize, const char
 	return listSize + 1;
 }
 
-bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data, u64 spriteCount) {
+bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite *data) {
 	SpriteAtlas *atlas = &sprites->atlases[atlasID - 1];
 
 	if (dynlist_size(atlas->sprites) >= MAX_SPRITES) {
@@ -129,7 +129,7 @@ bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite
 	V2 uvMin = v2(atlas->normalizedSpriteStep.x * atlasIndex.x, atlas->normalizedSpriteStep.y * atlasIndex.y);
 	data->_uvs = v4fv2s(uvMin, v2_add(uvMin, atlas->normalizedSpriteStep));
 	
-	dynlist_pushBackArray(atlas->sprites, data, spriteCount);
+	dynlist_pushBack(atlas->sprites, data);
 	return true;
 }
 

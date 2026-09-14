@@ -1,7 +1,7 @@
 #ifndef FONTS_H
 # define FONTS_H
 
-# include "src/sprites.h"
+# include "engine/sprites.h"
 
 typedef Sprite Font;
 

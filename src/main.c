@@ -1,16 +1,15 @@
 #include "engine/engine.h"
 #include "engine/window.h"
 #include "engine/inputs.h"
+#include "engine/ecs.h"
 #include "util/assert.h"
 #include "util/error.h"
 #include "util/log.h"
 #include "memory/mallocator.h"
-#include "src/sprites.h"
 #include "src/fonts.h"
-#include "src/ecs.h"
 #include <math.h>
 
-typedef struct {
+ typedef struct {
 	V2 pos;
 	V2 scale;
 	f32 z;
@@ -72,8 +71,8 @@ int main() {
 	glshader_bind(spritesHandler->shader);
 	glshader_setUniformMat4(spritesHandler->shader, "projection", &projectionMat);
 	glshader_setUniformMat4(spritesHandler->shader, "view", &viewMat);
-	
-	ECSEntity player = ecs_newEntity(ecs, (ECSComponentID[]){ transformCmp, velocityCmp, spriteCmp, entityFlagsCmp }, 4);
+
+	ECSEntity player = ecs_newEntity(ecs, (ECSComponentID[]){transformCmp, velocityCmp, spriteCmp, entityFlagsCmp}, 4);
 	*(TransformCmp *)ecs_get(ecs, player, transformCmp) = (TransformCmp){
 		.pos = v2(500, 500),
 		.scale = v2(60, 60),
@@ -116,7 +115,7 @@ int main() {
 		}
 
 		if (inputs_get(inputsHandler, "space").state & INPUT_PRESSED) {
-			ECSEntity newZombie = ecs_newEntity(ecs, (ECSComponentID[]){ transformCmp, velocityCmp, spriteCmp, entityFlagsCmp }, 4);
+			ECSEntity newZombie = ecs_newEntity(ecs, (ECSComponentID[]){transformCmp, velocityCmp, spriteCmp, entityFlagsCmp}, 4);
 			*(TransformCmp *)ecs_get(ecs, newZombie, transformCmp) = (TransformCmp){
 				.pos = inputsHandler->mouse.pos,
 				.scale = v2(60, 60),
@@ -132,7 +131,7 @@ int main() {
 			*(EntityFlagsCmp *)ecs_get(ecs, newZombie, entityFlagsCmp) = ENTITY_FLAGS_ZOMBIE;
 		}
 
-		ecs_forEach(ecs, ((ECSComponentID[]){ transformCmp, velocityCmp, entityFlagsCmp }), it) {
+		ecs_forEach(ecs, ((ECSComponentID[]){transformCmp, velocityCmp, entityFlagsCmp}), 3, it) {
 			TransformCmp *transforms = ecs_getComponent(ecs, it.archetype, transformCmp);
 			VelocityCmp *velocities = ecs_getComponent(ecs, it.archetype, velocityCmp);
 			EntityFlagsCmp *flags = ecs_getComponent(ecs, it.archetype, entityFlagsCmp);
@@ -169,7 +168,7 @@ int main() {
 			}
 		}
 
-		ecs_forEach(ecs, ((ECSComponentID[]){ transformCmp, velocityCmp }), it) {
+		ecs_forEach(ecs, ((ECSComponentID[]){transformCmp, velocityCmp}), 2, it) {
 			TransformCmp *transforms = ecs_getComponent(ecs, it.archetype, transformCmp);
 			VelocityCmp *velocities = ecs_getComponent(ecs, it.archetype, velocityCmp);
 
@@ -185,7 +184,7 @@ int main() {
 			}
 		}
 		
-		ecs_forEach(ecs, ((ECSComponentID[]){ transformCmp, spriteCmp }), it) {
+		ecs_forEach(ecs, ((ECSComponentID[]){transformCmp, spriteCmp}), 2, it) {
 			TransformCmp *transforms = ecs_getComponent(ecs, it.archetype, transformCmp);
 			SpriteCmp *sprites = ecs_getComponent(ecs, it.archetype, spriteCmp);
 
@@ -196,7 +195,7 @@ int main() {
 						.z = transforms[i].z,
 						.angle = transforms[i].angle,
 						.color = sprites[i].color,
-					}, 1);
+					});
 			}
 		}
 

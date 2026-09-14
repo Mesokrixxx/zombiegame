@@ -45,7 +45,7 @@ void fonts_add(Fonts *fonts, Font *data, char c) {
 	if (index.x < 0)
 		index = findIndex('?');
 
-	sprites_add(fonts->sprites, fonts->atlasID, index, data, 1);
+	sprites_add(fonts->sprites, fonts->atlasID, index, data);
 }
 
 void fonts_addStr(Fonts *fonts, Font *data, const char *str) {

@@ -23,7 +23,7 @@ void main() {
 	vec2 rotated = 
 		vec2(
 			pos.x * c - pos.y * s, 
-			pos.x * s + pos.y * c);;
+			pos.x * s + pos.y * c);
 
 	texCoord = mix(iUVs.xy, iUVs.zw, vTexCoord);
 	color = iColor;
