@@ -1,5 +1,4 @@
 #include "sprites.h"
-#include "math/vector2.h"
 #include "util/error.h"
 #include "gl/draw.h"
 
@@ -75,9 +74,9 @@ bool sprites_init(Sprites *sprites) {
 			{ .count = 2, .type = GLTYPE_F32, .divisor = 1 },
 			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, scale), .divisor = 1 },
 			{ .count = 1, .type = GLTYPE_F32, .offset = offsetof(Sprite, z), .divisor = 1 },
+			{ .count = 1, .type = GLTYPE_F32, .offset = offsetof(Sprite, angle), .divisor = 1 },
 			{ .count = 4, .type = GLTYPE_F32, .offset = offsetof(Sprite, color), .divisor = 1},
-			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvMin), .divisor = 1},
-			{ .count = 2, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvMax), .divisor = 1},
+			{ .count = 4, .type = GLTYPE_F32, .offset = offsetof(Sprite, _uvs), .divisor = 1},
 		}));
 	return true;
 }
@@ -126,8 +125,10 @@ bool sprites_add(Sprites *sprites, SpriteAtlasID atlasID, V2i atlasIndex, Sprite
 	}
 
 	atlasIndex.y = atlas->spriteCount.y - atlasIndex.y - 1;
-	data->_uvMin = v2(atlas->normalizedSpriteStep.x * atlasIndex.x, atlas->normalizedSpriteStep.y * atlasIndex.y);
-	data->_uvMax = v2_add(data->_uvMin, atlas->normalizedSpriteStep);
+	
+	V2 uvMin = v2(atlas->normalizedSpriteStep.x * atlasIndex.x, atlas->normalizedSpriteStep.y * atlasIndex.y);
+	data->_uvs = v4fv2s(uvMin, v2_add(uvMin, atlas->normalizedSpriteStep));
+	
 	dynlist_pushBackArray(atlas->sprites, data, spriteCount);
 	return true;
 }

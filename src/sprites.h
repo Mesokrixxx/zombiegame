@@ -12,8 +12,9 @@ typedef struct {
 	V2 pos;
 	V2 scale;
 	f32 z;
+	f32 angle;
 	V4 color;
-	V2 _uvMin, _uvMax;
+	V4 _uvs;
 } Sprite;
 
 typedef struct {

@@ -1,15 +1,15 @@
 @vertex
 #version 330 core
 
-layout (location = 0) in vec2 lPos;
-layout (location = 1) in vec2 lTexCoord;
+layout (location = 0) in vec2 vPos;
+layout (location = 1) in vec2 vTexCoord;
 
 layout (location = 2) in vec2 iPos;
 layout (location = 3) in vec2 iScale;
 layout (location = 4) in float iZ;
-layout (location = 5) in vec4 iColor;
-layout (location = 6) in vec2 iUVMin;
-layout (location = 7) in vec2 iUVMax;
+layout (location = 5) in float iAngle; 
+layout (location = 6) in vec4 iColor;
+layout (location = 7) in vec4 iUVs;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -18,10 +18,17 @@ out vec2 texCoord;
 out vec4 color;
 
 void main() {
-	texCoord = mix(iUVMin, iUVMax, lTexCoord);
+	float c = cos(iAngle), s = sin(iAngle);
+	vec2 pos = vPos * iScale;
+	vec2 rotated = 
+		vec2(
+			pos.x * c - pos.y * s, 
+			pos.x * s + pos.y * c);;
+
+	texCoord = mix(iUVs.xy, iUVs.zw, vTexCoord);
 	color = iColor;
 
-	gl_Position = projection * view * vec4(lPos * iScale + iPos, iZ, 1);
+	gl_Position = projection * view * vec4(rotated + iPos, iZ, 1);
 }
 
 @fragment
